@@ -1,0 +1,5 @@
+include ':app'
+
+project(':app').name = 'ChatHeadEnabler'
+
+rootProject.name = "ChatHeadEnabler"
