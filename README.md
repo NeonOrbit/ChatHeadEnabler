@@ -1,13 +1,13 @@
 ChatHeadEnabler
 ===============
 
-Xposed module to enbale Facebook Messenger chat head.
+Xposed module to enable Facebook Messenger chat head.
 
 
 Installation
 ------------
 
-* Install [Magisk](https://www.xda-developers.com/how-to-install-magisk/)
+* Install [Magisk](https://github.com/topjohnwu/Magisk)
 * Install, and activate [LSPosed](https://github.com/LSPosed/LSPosed) or [EdXposed](https://github.com/ElderDrivers/EdXposed)
 * Download, install, and activate [ChatHeadEnabler](https://github.com/NeonOrbit/ChatHeadEnabler/releases)
 
