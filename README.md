@@ -1,7 +1,7 @@
 ChatHeadEnabler
 ===============
 
-Xposed module to enable Facebook Messenger chat head.
+Xposed module to enable Facebook Messenger chat head in Android 11
 
 
 Installation
