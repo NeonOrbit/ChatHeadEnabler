@@ -8,7 +8,7 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage;
 
 import static de.robv.android.xposed.XposedHelpers.setStaticIntField;
 
-public class ModuleEntryPoint implements IXposedHookLoadPackage {
+public class ChatHeadEnabler implements IXposedHookLoadPackage {
 
   private static final String   MODULE_NAME     = "ChatHeadEnabler";
   private static final String   TARGET_PACKAGE  = "com.facebook.orca";
