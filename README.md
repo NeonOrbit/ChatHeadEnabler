@@ -8,8 +8,7 @@ Description
 -----------
 
 On Android 11 and higher, Facebook Messenger won't let you use it's Chat Head feature.  
-Instead it uses Chat Bubble feature, which has a lot of bugs.  
-This module will bring back original Chat Head feature.
+Instead it uses Chat Bubble feature, which has a lot of bugs. This module will bring back original Chat Head feature.
 
 
 Requirements
