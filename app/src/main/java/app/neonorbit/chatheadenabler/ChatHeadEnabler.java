@@ -2,8 +2,12 @@ package app.neonorbit.chatheadenabler;
 
 import android.os.Build;
 
+import java.lang.reflect.Method;
+
 import de.robv.android.xposed.IXposedHookLoadPackage;
+import de.robv.android.xposed.XC_MethodReplacement;
 import de.robv.android.xposed.XposedBridge;
+import de.robv.android.xposed.XposedHelpers;
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
 
 import static de.robv.android.xposed.XposedHelpers.setStaticIntField;
@@ -22,7 +26,23 @@ public class ChatHeadEnabler implements IXposedHookLoadPackage {
 
     XposedBridge.log("Applying " + MODULE_NAME + " module to " + lpparam.packageName);
 
-    setStaticIntField(Build.VERSION.class, "SDK_INT", SPOOF_VERSION);
+    //setStaticIntField(Build.VERSION.class, "SDK_INT", SPOOF_VERSION);
 
+    hookTargetApp(lpparam.classLoader);
   }
+
+  public void hookTargetApp(ClassLoader classLoader) {
+    final DataProvider provider = new DataProvider(classLoader);
+    final Method method = provider.getTargetMethod();
+    final XC_MethodReplacement replace = XC_MethodReplacement.returnConstant(false);
+    if (method != null) {
+      XposedBridge.hookMethod(method, replace);
+    } else {
+      Util.runOnAppContext(classLoader, context -> {
+        Method _method = provider.getTargetMethod(context);
+        XposedBridge.hookMethod(_method, replace);
+      });
+    }
+  }
+
 }
