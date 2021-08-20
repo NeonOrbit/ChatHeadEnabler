@@ -3,14 +3,13 @@ package app.neonorbit.chatheadenabler;
 import android.os.Build;
 
 import java.lang.reflect.Method;
+import java.util.Objects;
 
 import de.robv.android.xposed.IXposedHookLoadPackage;
 import de.robv.android.xposed.XC_MethodReplacement;
 import de.robv.android.xposed.XposedBridge;
 import de.robv.android.xposed.XposedHelpers;
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
-
-import static de.robv.android.xposed.XposedHelpers.setStaticIntField;
 
 public class ChatHeadEnabler implements IXposedHookLoadPackage {
 
@@ -20,18 +19,21 @@ public class ChatHeadEnabler implements IXposedHookLoadPackage {
 
   @Override
   public void handleLoadPackage(XC_LoadPackage.LoadPackageParam lpparam) throws Throwable {
-
-    if (!lpparam.packageName.equals(TARGET_PACKAGE))
+    if (!lpparam.packageName.equals(DataProvider.TARGET_PACKAGE) ||
+        !lpparam.processName.equals(DataProvider.TARGET_PACKAGE)) {
       return;
+    }
 
     XposedBridge.log("Applying " + MODULE_NAME + " module to " + lpparam.packageName);
 
-    //setStaticIntField(Build.VERSION.class, "SDK_INT", SPOOF_VERSION);
-
-    hookTargetApp(lpparam.classLoader);
+    try {
+      hookTargetApp(lpparam.classLoader);
+    } catch (Exception e) {
+      fallback(e);
+    }
   }
 
-  public void hookTargetApp(ClassLoader classLoader) {
+  private void hookTargetApp(ClassLoader classLoader) {
     final DataProvider provider = new DataProvider(classLoader);
     final Method method = provider.getTargetMethod();
     final XC_MethodReplacement replace = XC_MethodReplacement.returnConstant(false);
@@ -39,10 +41,19 @@ public class ChatHeadEnabler implements IXposedHookLoadPackage {
       XposedBridge.hookMethod(method, replace);
     } else {
       Util.runOnAppContext(classLoader, context -> {
-        Method _method = provider.getTargetMethod(context);
-        XposedBridge.hookMethod(_method, replace);
+        try {
+          Method _method = provider.getTargetMethod(context);
+          XposedBridge.hookMethod(_method, replace);
+        } catch (Exception e) {
+          fallback(e);
+        }
       });
     }
+  }
+
+  private void fallback(Exception exception) {
+    exception.printStackTrace();
+    XposedHelpers.setStaticIntField(Build.VERSION.class, "SDK_INT", Build.VERSION_CODES.Q);
   }
 
 }
