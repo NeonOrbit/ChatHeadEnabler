@@ -3,7 +3,6 @@ package app.neonorbit.chatheadenabler;
 import android.os.Build;
 
 import java.lang.reflect.Method;
-import java.util.Objects;
 
 import de.robv.android.xposed.IXposedHookLoadPackage;
 import de.robv.android.xposed.XC_MethodReplacement;
@@ -13,19 +12,13 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage;
 
 public class ChatHeadEnabler implements IXposedHookLoadPackage {
 
-  private static final String   MODULE_NAME     = "ChatHeadEnabler";
-  private static final String   TARGET_PACKAGE  = "com.facebook.orca";
-  private static final int      SPOOF_VERSION   = Build.VERSION_CODES.Q;
-
   @Override
-  public void handleLoadPackage(XC_LoadPackage.LoadPackageParam lpparam) throws Throwable {
+  public void handleLoadPackage(XC_LoadPackage.LoadPackageParam lpparam) {
     if (!lpparam.packageName.equals(DataProvider.TARGET_PACKAGE) ||
         !lpparam.processName.equals(DataProvider.TARGET_PACKAGE)) {
       return;
     }
-
-    XposedBridge.log("Applying " + MODULE_NAME + " module to " + lpparam.packageName);
-
+    Util.log("Applying");
     try {
       hookTargetApp(lpparam.classLoader);
     } catch (Exception e) {
@@ -52,7 +45,7 @@ public class ChatHeadEnabler implements IXposedHookLoadPackage {
   }
 
   private void fallback(Exception exception) {
-    exception.printStackTrace();
+    Util.warnFallback(exception);
     XposedHelpers.setStaticIntField(Build.VERSION.class, "SDK_INT", Build.VERSION_CODES.Q);
   }
 

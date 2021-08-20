@@ -15,11 +15,6 @@ public class ClassData {
   }
 
   @Nullable
-  public static ClassData from(String clazz, String method) {
-    return (clazz.isEmpty() || method.isEmpty()) ? null : new ClassData(clazz, method);
-  }
-
-  @Nullable
   public static ClassData from(@Nullable DexBackedClassDef dexClassDef) {
     return (dexClassDef == null) ? null : new ClassData(getClassName(dexClassDef), "");
   }

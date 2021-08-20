@@ -62,14 +62,16 @@ public class DataProvider {
     String clazz   = preferences.getString(PREF_KEY_CLASS, "");
     String method  = preferences.getString(PREF_KEY_METHOD, "");
     String version = preferences.getString(PREF_KEY_VERSION, "");
+    Util.debugLog("Reading data from " + preferences.getClass().getName());
     return getValidMethod(clazz, method, version);
   }
 
   private Method fetchData(Context context) {
+    Util.debugLog("Fetching new data");
     String apk = context.getApplicationInfo().sourceDir;
     ApkAnalyzer apkAnalyzer = new ApkAnalyzer(apk);
     ClassData data = apkAnalyzer.findMethod(fileFilter, classFilter, methodFilter);
-    Method method = getMethod(data);
+    Method method = getFetchedMethod(data);
     if (method == null) return null;
     saveHookData(context, data);
     return method;
@@ -89,11 +91,19 @@ public class DataProvider {
   private Method getValidMethod(String clazz, String method, String version) {
     String targetVersion = getMessengerVersion(null);
     boolean isValid = targetVersion != null && targetVersion.equals(version);
+    if (!isValid && !version.isEmpty()) Util.debugLog("App version changed");
     return !isValid ? null : findMethodExactIfExists(clazz, classLoader, method);
   }
 
-  private Method getMethod(ClassData data) {
-    return data == null ? null : findMethodExactIfExists(data.clazz, classLoader, data.method);
+  private Method getFetchedMethod(ClassData data) {
+    if (data == null) {
+      Util.debugLog("Failed to fetch new data");
+    } else {
+      Method method = findMethodExactIfExists(data.clazz, classLoader, data.method);
+      String validity = method != null ? "valid" : "invalid";
+      Util.debugLog("Fetched (" + validity + "): " + data.clazz + "." + data.method);
+    }
+    return null;
   }
 
   private SharedPreferences getPreferences(Context context) {

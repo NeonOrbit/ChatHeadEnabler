@@ -12,7 +12,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.stream.Collectors;
 
-import de.robv.android.xposed.XposedBridge;
+import app.neonorbit.chatheadenabler.Util;
 
 public class ApkAnalyzer {
   private final MultiDexContainer<? extends DexBackedDexFile> container;
@@ -46,18 +46,17 @@ public class ApkAnalyzer {
       for (String entry: container.getDexEntryNames()) {
         if (!entry.contains("classes")) continue;
 
-        XposedBridge.log("Loading Dex: " + entry);
+        Util.debugLog("Loading Dex: " + entry);
 
         dexEntry = container.getEntry(entry);
         if (dexEntry == null) continue;
 
         dexFile = dexEntry.getDexFile();
-
         if (!verifyDexFilter(dexFile, fileFilter)) {
           continue;
         }
 
-        XposedBridge.log("Analyzing Dex: " + entry);
+        Util.debugLog("Analyzing Dex: " + entry);
 
         dexAnalyzer = new DexAnalyzer(dexFile);
         ClassData result = !getMethod ? dexAnalyzer.locateClass(classFilter) :
@@ -68,6 +67,7 @@ public class ApkAnalyzer {
       }
     } catch (IOException e) {
       e.printStackTrace();
+      Util.debugLog("Failed to load dex files");
     }
     return null;
   }
@@ -85,6 +85,7 @@ public class ApkAnalyzer {
       return DexFileFactory.loadDexContainer(apk, Opcodes.getDefault());
     } catch (IOException e) {
       e.printStackTrace();
+      Util.debugLog("Failed to load dex container");
     }
     return null;
   }
