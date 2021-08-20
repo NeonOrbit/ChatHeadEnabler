@@ -40,6 +40,7 @@ public class DataProvider {
                                               s -> s.contains("SDK_INT") &&
                                                    s.contains("isLowRamDevice"));
 
+  private boolean needsFetch;
   private final ClassLoader classLoader;
 
   public DataProvider(ClassLoader classLoader) {
@@ -47,14 +48,19 @@ public class DataProvider {
   }
 
   public Method getTargetMethod() {
+    Util.debugLog("Reading data through xposed");
     return getTargetMethod(getXPreferences());
   }
 
   public Method getTargetMethod(Context context) {
-    if (!context.getPackageName().equals(TARGET_PACKAGE))
+    if (!context.getPackageName().equals(TARGET_PACKAGE)) {
       return null;
+    } else if (needsFetch) {
+      return fetchData(context);
+    }
+    Util.debugLog("Reading data through hooked app");
     Method method = getTargetMethod(getPreferences(context));
-    return method != null ? method : fetchData(context);
+    return (method != null) ? method : fetchData(context);
   }
 
   private Method getTargetMethod(SharedPreferences preferences) {
@@ -62,7 +68,6 @@ public class DataProvider {
     String clazz   = preferences.getString(PREF_KEY_CLASS, "");
     String method  = preferences.getString(PREF_KEY_METHOD, "");
     String version = preferences.getString(PREF_KEY_VERSION, "");
-    Util.debugLog("Reading data from " + preferences.getClass().getName());
     return getValidMethod(clazz, method, version);
   }
 
@@ -86,12 +91,18 @@ public class DataProvider {
         .putString(PREF_KEY_CLASS, data.clazz)
         .putString(PREF_KEY_METHOD, data.method)
         .apply();
+    Util.debugLog("Saved new data");
   }
 
   private Method getValidMethod(String clazz, String method, String version) {
     String targetVersion = getMessengerVersion(null);
     boolean isValid = targetVersion != null && targetVersion.equals(version);
-    if (!isValid && !version.isEmpty()) Util.debugLog("App version changed");
+    if (!isValid && !version.isEmpty()) {
+      needsFetch = true;
+      Util.debugLog("App version changed");
+    } else if (!version.isEmpty()) {
+      Util.debugLog("Retrieved: " + clazz + "." + method);
+    }
     return !isValid ? null : findMethodExactIfExists(clazz, classLoader, method);
   }
 
@@ -102,6 +113,7 @@ public class DataProvider {
       Method method = findMethodExactIfExists(data.clazz, classLoader, data.method);
       String validity = method != null ? "valid" : "invalid";
       Util.debugLog("Fetched (" + validity + "): " + data.clazz + "." + data.method);
+      return method;
     }
     return null;
   }
@@ -110,15 +122,21 @@ public class DataProvider {
     if (context.getPackageName().equals(TARGET_PACKAGE)) {
       return context.getSharedPreferences(SHARED_PREF_FILE, Context.MODE_PRIVATE);
     }
+    Util.debugLog("Failed to get SharedPreferences");
     return null;
   }
 
   private SharedPreferences getXPreferences() {
     XSharedPreferences preferences = new XSharedPreferences(TARGET_PACKAGE, SHARED_PREF_FILE);
-    if (!preferences.getFile().canRead()) {
-      if (!preferences.makeWorldReadable()) return null;
+    if (preferences.getFile().isFile()) {
+      if (preferences.getFile().canRead() || preferences.makeWorldReadable()) {
+        return preferences;
+      }
+      Util.debugLog("Failed to get XSharedPreferences");
+    } else {
+      needsFetch = true;
     }
-    return preferences;
+    return null;
   }
 
   private String getMessengerVersion(@Nullable Context context) {

@@ -2,7 +2,6 @@ package app.neonorbit.chatheadenabler;
 
 import android.app.Application;
 import android.content.Context;
-import android.util.Log;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -28,12 +27,12 @@ public class Util {
   }
 
   public static void wLog(String msg) {
-    XposedBridge.log(APP_NAME + "-Warn: " + msg);
+    XposedBridge.log(APP_NAME + ": [warning] " + msg);
   }
 
   public static void debugLog(String msg) {
     if (BuildConfig.DEBUG) {
-      XposedBridge.log(APP_NAME + "-" + getTime() + ": " + msg);
+      XposedBridge.log(APP_NAME + ": " + getTime() + " " + msg);
     }
   }
 
@@ -41,13 +40,13 @@ public class Util {
     CharSequence err = Arrays.stream(e.getStackTrace())
                              .map(s -> "\t\tat " + s.toString())
                              .collect(Collectors.joining("\n"));
-    XposedBridge.log(APP_NAME + "-Exception: \n\t\t" +
+    XposedBridge.log(APP_NAME + ": [exception] \n\t\t" +
                e.getClass().getName() + ": " + e.getMessage() + "\n" + err);
   }
 
   public static void warnFallback(Exception exception) {
     wLog("Failed to hook dynamically, falling back to API spoofing method.\n" +
-         " - note: chat head might not work in landscape mode, please report.\n.");
+         " - Note: Chat head might not work in landscape mode, please report.\n...");
     eLog(exception);
   }
 
