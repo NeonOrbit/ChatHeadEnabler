@@ -18,7 +18,7 @@ public class ChatHeadEnabler implements IXposedHookLoadPackage {
         !lpparam.processName.equals(DataProvider.TARGET_PACKAGE)) {
       return;
     }
-    Util.log("Applying");
+    Util.log("Enabling Messenger Chat Head ...");
     try {
       hookTargetApp(lpparam.classLoader);
     } catch (Exception e) {
