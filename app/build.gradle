@@ -18,6 +18,11 @@ android {
         release {
             minifyEnabled true
             proguardFiles 'proguard-rules.pro'
+            applicationVariants.all { variant ->
+                variant.outputs.all {
+                    outputFileName = "${rootProject.name}-v${variant.versionName}.apk"
+                }
+            }
         }
     }
 
