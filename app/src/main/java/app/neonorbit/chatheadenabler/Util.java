@@ -2,6 +2,9 @@ package app.neonorbit.chatheadenabler;
 
 import android.app.Application;
 import android.content.Context;
+import android.os.Build;
+import android.util.Log;
+import android.widget.Toast;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -23,36 +26,40 @@ public class Util {
   public static final String APP_NAME = "ChatHeadEnabler";
 
   public static void log(String msg) {
+    Log.i(APP_NAME, msg);
     XposedBridge.log(APP_NAME + ": " + msg);
   }
 
   public static void wLog(String msg) {
-    XposedBridge.log(APP_NAME + ": [warning] " + msg);
+    log("[warning] " + msg);
   }
 
   public static void debugLog(String msg) {
-    if (BuildConfig.DEBUG) {
-      XposedBridge.log(APP_NAME + ": " + getTime() + " " + msg);
-    }
+    if (BuildConfig.DEBUG) log(getTime() + " " + msg);
   }
 
-  public static void eLog(Exception e) {
-    CharSequence err = Arrays.stream(e.getStackTrace())
+  public static void eLog(Throwable t) {
+    CharSequence err = Arrays.stream(t.getStackTrace())
                              .map(s -> "\t\tat " + s.toString())
                              .collect(Collectors.joining("\n"));
-    XposedBridge.log(APP_NAME + ": [exception] \n\t\t" +
-               e.getClass().getName() + ": " + e.getMessage() + "\n" + err);
+    log("[exception] \n\t\t" + t.getClass().getName() + ": " + t.getMessage() + "\n" + err);
   }
 
-  public static void warnFallback(Exception exception) {
+  public static void warnFallback(Throwable throwable) {
+    String toast = APP_NAME + ": Failed to hook.\nPlease check log for details.";
+    Toast.makeText(getContext(), toast, Toast.LENGTH_SHORT).show();
     wLog("Failed to hook dynamically, falling back to API spoofing method.\n" +
          " - Note: Chat head might not work in landscape mode, please report.\n...");
-    eLog(exception);
+    eLog(throwable);
   }
 
-  private static String getTime() {
+  public static String getTime() {
     Date date = new Date(System.currentTimeMillis());
     return new SimpleDateFormat("HH:mm:ss.SSS", Locale.getDefault()).format(date);
+  }
+
+  public static void spoofAPILevel() {
+    XposedHelpers.setStaticIntField(Build.VERSION.class, "SDK_INT", Build.VERSION_CODES.Q);
   }
 
   public static @Nullable Context getContext() {
