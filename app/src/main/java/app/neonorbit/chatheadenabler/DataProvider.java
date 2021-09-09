@@ -25,7 +25,7 @@ public class DataProvider {
   private static final String PREF_KEY_VERSION  = "version";
   private static final String SHARED_PREF_FILE  = BuildConfig.APPLICATION_ID + "_pref";
 
-  private final DexFilter fileFilter  =  new DexFilter(
+  private final DexFilter fileFilter   = new DexFilter(
                                               RefType.get().string(),
                                               s -> s.contains("notification_bubbles"));
 
@@ -78,19 +78,19 @@ public class DataProvider {
     ClassData data = apkAnalyzer.findMethod(fileFilter, classFilter, methodFilter);
     Method method = getFetchedMethod(data);
     if (method == null) return null;
-    saveHookData(context, data);
+    saveData(context, data);
     return method;
   }
 
-  private void saveHookData(Context context, ClassData data) {
+  private void saveData(Context context, ClassData data) {
     String version = getMessengerVersion(context);
     SharedPreferences preferences = getPreferences(context);
     if (preferences == null || version == null) return;
     context.getSharedPreferences(SHARED_PREF_FILE, Context.MODE_PRIVATE).edit()
-        .putString(PREF_KEY_VERSION, version)
-        .putString(PREF_KEY_CLASS, data.clazz)
-        .putString(PREF_KEY_METHOD, data.method)
-        .apply();
+           .putString(PREF_KEY_VERSION, version)
+           .putString(PREF_KEY_CLASS, data.clazz)
+           .putString(PREF_KEY_METHOD, data.method)
+           .apply();
     Util.debugLog("Saved new data");
   }
 

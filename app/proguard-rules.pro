@@ -1,6 +1,6 @@
 # Proguard
 -dontoptimize
--repackageclasses 'xneonp'
+-repackageclasses 'xch'
 -keepattributes SourceFile, LineNumberTable
 
 # Preserve app source code
