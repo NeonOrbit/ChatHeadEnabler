@@ -1,5 +1,8 @@
 package app.neonorbit.chatheadenabler;
 
+import static de.robv.android.xposed.XposedHelpers.findClass;
+import static de.robv.android.xposed.XposedHelpers.findMethodExactIfExists;
+
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
@@ -8,15 +11,14 @@ import android.content.pm.PackageManager;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.Objects;
 
-import app.neonorbit.chatheadenabler.dex.DexFilter;
 import app.neonorbit.chatheadenabler.dex.ApkAnalyzer;
 import app.neonorbit.chatheadenabler.dex.ClassData;
+import app.neonorbit.chatheadenabler.dex.DexFilter;
 import app.neonorbit.chatheadenabler.dex.RefType;
 import de.robv.android.xposed.XSharedPreferences;
-
-import static de.robv.android.xposed.XposedHelpers.findMethodExactIfExists;
 
 public class DataProvider {
   public  static final String TARGET_PACKAGE    = "com.facebook.orca";
@@ -25,20 +27,20 @@ public class DataProvider {
   private static final String PREF_KEY_VERSION  = "version";
   private static final String SHARED_PREF_FILE  = BuildConfig.APPLICATION_ID + "_pref";
 
-  private final DexFilter fileFilter   = new DexFilter(
-                                              RefType.get().string(),
-                                              s -> s.contains("notification_bubbles"));
+  private static final String ThreadSummary = "com.facebook.messaging.model.threads.ThreadSummary";
+  private static final String OpenChatHeadMenuItem = "com.facebook.messaging.chatheads.plugins.core"
+                                                   + ".threadsettingsmenuitem.OpenChatHeadMenuItem";
 
-  private final DexFilter classFilter  = new DexFilter(
-                                              RefType.get().string().method().field(),
-                                              s -> s.contains("notification_bubbles") &&
-                                                   s.contains("isLowRamDevice") &&
-                                                   s.contains("SDK_INT"));
+  private final DexFilter fileFilter   = new DexFilter(RefType.get().method(),
+                                                       s -> s.contains("isLowRamDevice"));
 
-  private final DexFilter methodFilter = new DexFilter(
-                                              RefType.get().field().method(),
-                                              s -> s.contains("SDK_INT") &&
-                                                   s.contains("isLowRamDevice"));
+  private final DexFilter classFilter  = new DexFilter(RefType.get().field().method(),
+                                                       s -> s.contains("isLowRamDevice") &&
+                                                            s.contains("SDK_INT"));
+
+  private final DexFilter methodFilter = new DexFilter(RefType.get().field().method(),
+                                                       s -> s.contains("SDK_INT") &&
+                                                            s.contains("isLowRamDevice"));
 
   private boolean needsFetch;
   private final ClassLoader classLoader;
@@ -48,17 +50,18 @@ public class DataProvider {
   }
 
   public Method getTargetMethod() {
-    Util.debugLog("Reading data through xposed");
+    Util.dLog("Reading data through xposed");
     return getTargetMethod(getXPreferences());
   }
 
   public Method getTargetMethod(Context context) {
     if (!context.getPackageName().equals(TARGET_PACKAGE)) {
+      Util.wLog("Invalid Context: " + context.getPackageName());
       return null;
     } else if (needsFetch) {
       return fetchData(context);
     }
-    Util.debugLog("Reading data through hooked app");
+    Util.dLog("Reading data through hooked app");
     Method method = getTargetMethod(getPreferences(context));
     return (method != null) ? method : fetchData(context);
   }
@@ -72,10 +75,19 @@ public class DataProvider {
   }
 
   private Method fetchData(Context context) {
-    Util.debugLog("Fetching new data");
+    Util.dLog("Fetching new data");
     String apk = context.getApplicationInfo().sourceDir;
     ApkAnalyzer apkAnalyzer = new ApkAnalyzer(apk);
-    ClassData data = apkAnalyzer.findMethod(fileFilter, classFilter, methodFilter);
+    ClassData data = null;
+    Class<?> clazz = locateTargetClassFromRelativeClasses();
+    if (clazz != null) {
+      Util.dLog("Fast fetching...");
+      data = apkAnalyzer.findMethod(clazz, methodFilter);
+    }
+    if (data == null) {
+      Util.dLog("Deep fetching...");
+      data = apkAnalyzer.findMethod(fileFilter, classFilter, methodFilter);
+    }
     Method method = getFetchedMethod(data);
     if (method == null) return null;
     saveData(context, data);
@@ -91,7 +103,27 @@ public class DataProvider {
            .putString(PREF_KEY_CLASS, data.clazz)
            .putString(PREF_KEY_METHOD, data.method)
            .apply();
-    Util.debugLog("Saved new data");
+    Util.dLog("Saved new data");
+  }
+
+  private Class<?> locateTargetClassFromRelativeClasses() {
+    try {
+      Class<?> ClassThreadSummary = findClass(ThreadSummary, classLoader);
+      Class<?> ClassOpenChatHeadMenuItem = findClass(OpenChatHeadMenuItem, classLoader);
+      for(Method method : ClassOpenChatHeadMenuItem.getDeclaredMethods()) {
+        if (Modifier.isStatic(method.getModifiers()) &&
+            method.getReturnType() == boolean.class &&
+            method.getParameterCount() == 6 &&
+            method.getParameterTypes()[0].getName().equals(Context.class.getName()) &&
+            method.getParameterTypes()[3].getName().equals(ClassThreadSummary.getName())) {
+          return method.getParameterTypes()[1];
+        }
+      }
+    } catch (Throwable t) {
+      Util.dLog(t.getMessage());
+    }
+    Util.dLog("Failed to locate target class from relative classes");
+    return null;
   }
 
   private Method getValidMethod(String clazz, String method, String version) {
@@ -99,30 +131,29 @@ public class DataProvider {
     boolean isValid = targetVersion != null && targetVersion.equals(version);
     if (!isValid && !version.isEmpty()) {
       needsFetch = true;
-      Util.debugLog("App version changed");
+      Util.dLog("App version changed");
     } else if (!version.isEmpty()) {
-      Util.debugLog("Retrieved: " + clazz + "." + method);
+      Util.dLog("Retrieved: " + clazz + "." + method + "()");
     }
     return !isValid ? null : findMethodExactIfExists(clazz, classLoader, method);
   }
 
   private Method getFetchedMethod(ClassData data) {
     if (data == null) {
-      Util.debugLog("Failed to fetch new data");
+      Util.wLog("Failed to fetch new data");
+      return null;
     } else {
       Method method = findMethodExactIfExists(data.clazz, classLoader, data.method);
       String validity = method != null ? "valid" : "invalid";
-      Util.debugLog("Fetched (" + validity + "): " + data.clazz + "." + data.method);
+      Util.dLog("Fetched (" + validity + "): " + data.clazz + "." + data.method + "()");
       return method;
     }
-    return null;
   }
 
   private SharedPreferences getPreferences(Context context) {
     if (context.getPackageName().equals(TARGET_PACKAGE)) {
       return context.getSharedPreferences(SHARED_PREF_FILE, Context.MODE_PRIVATE);
     }
-    Util.debugLog("Failed to get SharedPreferences");
     return null;
   }
 
@@ -132,7 +163,7 @@ public class DataProvider {
       if (preferences.getFile().canRead() || preferences.makeWorldReadable()) {
         return preferences;
       }
-      Util.debugLog("Failed to get XSharedPreferences");
+      Util.dLog("Failed to get XSharedPreferences");
     } else {
       needsFetch = true;
     }
@@ -145,7 +176,8 @@ public class DataProvider {
       PackageManager pm = Objects.requireNonNull(context).getPackageManager();
       PackageInfo pInfo = pm.getPackageInfo(TARGET_PACKAGE, 0);
       return String.valueOf(pInfo.getLongVersionCode());
-    } catch (Throwable ignore) {
+    } catch (Throwable ignored) {
+      Util.dLog("Failed to get Messenger version");
       return null;
     }
   }

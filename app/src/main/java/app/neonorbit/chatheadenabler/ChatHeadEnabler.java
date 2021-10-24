@@ -31,7 +31,8 @@ public class ChatHeadEnabler implements IXposedHookLoadPackage {
       Util.runOnAppContext(classLoader, context -> {
         try {
           Method _method = provider.getTargetMethod(context);
-          XposedBridge.hookMethod(_method, replace);
+          if (_method == null) fallback(null);
+          else XposedBridge.hookMethod(_method, replace);
         } catch (Throwable throwable) {
           fallback(throwable);
         }
