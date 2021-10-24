@@ -25,16 +25,21 @@ public class DexAnalyzer {
 
   @Nullable
   public ClassData locateClass(DexFilter classFilter) {
-    return ClassData.from(extractDexClass(classFilter));
+    return ClassData.from(locateDexClass(classFilter));
   }
 
   @Nullable
-  public ClassData locateMethod(DexFilter classFilter,
-                                DexFilter methodFilter) {
-    return ClassData.from(extractDexMethod(classFilter, methodFilter));
+  public ClassData locateMethod(DexFilter classFilter, DexFilter methodFilter) {
+    return ClassData.from(locateDexMethod(locateDexClass(classFilter), methodFilter));
   }
 
-  private DexBackedClassDef extractDexClass(DexFilter classFilter) {
+  @Nullable
+  public ClassData locateMethod(Class<?> javaClass, DexFilter methodFilter) {
+    DexBackedClassDef dexClass = DexUtil.javaToDexClass(javaClass, dexFile);
+    return ClassData.from(locateDexMethod(dexClass, methodFilter));
+  }
+
+  private DexBackedClassDef locateDexClass(DexFilter classFilter) {
     for (DexBackedClassDef dexClass : dexFile.getClasses()) {
       if (classFilter.verify(decodeClassReferences(dexClass, classFilter.getType()))) {
         return dexClass;
@@ -43,9 +48,7 @@ public class DexAnalyzer {
     return null;
   }
 
-  private DexBackedMethod extractDexMethod(DexFilter classFilter,
-                                           DexFilter methodFilter) {
-    DexBackedClassDef dexClass = extractDexClass(classFilter);
+  private DexBackedMethod locateDexMethod(DexBackedClassDef dexClass, DexFilter methodFilter) {
     if (dexClass == null) return null;
     for (DexBackedMethod dexMethod : dexClass.getVirtualMethods()) {
       if (methodFilter.verify(decodeMethodReferences(dexMethod, methodFilter.getType()))) {
@@ -56,7 +59,7 @@ public class DexAnalyzer {
   }
 
   private String decodeClassReferences(DexBackedClassDef dexClass, RefType type) {
-    StringJoiner buffer = new StringJoiner(" ");
+    StringJoiner buffer = new StringJoiner("\n");
     dexClass.getVirtualMethods().forEach(method -> {
       decodeMethodReferences(method, type, buffer);
     });
@@ -64,15 +67,13 @@ public class DexAnalyzer {
   }
 
   private String decodeMethodReferences(DexBackedMethod dexMethod, RefType type) {
-    return decodeMethodReferences(dexMethod, type, new StringJoiner(" "));
+    return decodeMethodReferences(dexMethod, type, new StringJoiner("\n"));
   }
 
   private String decodeMethodReferences(DexBackedMethod dexMethod,
                                         RefType type, StringJoiner buffer) {
     MethodImplementation implementation = dexMethod.getImplementation();
-    if (implementation == null) {
-      return buffer.toString();
-    }
+    if (implementation == null) { return buffer.toString(); }
     for (Instruction instruction : implementation.getInstructions()) {
       if (instruction instanceof ReferenceInstruction) {
         decodeReference(((ReferenceInstruction) instruction).getReference(), type, buffer);
