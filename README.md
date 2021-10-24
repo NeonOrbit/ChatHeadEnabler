@@ -3,6 +3,9 @@ ChatHeadEnabler
 
 An Xposed Module to enable Facebook Messenger chat head on Android 11+ devices
 
+[![Project](https://img.shields.io/badge/Project-Active-darkcyan)](https://forum.xda-developers.com/t/4305391)
+[![Download](https://img.shields.io/badge/dynamic/json?color=blue&label=Download&logo=Github&query=$.tag_name&url=https://api.github.com/repos/NeonOrbit/ChatHeadEnabler/releases/latest&cacheSeconds=1800)](https://github.com/NeonOrbit/ChatHeadEnabler/releases/latest)
+[![Support](https://img.shields.io/badge/Support-XDA-royalblue)](https://forum.xda-developers.com/t/4305391)
 
 Description
 -----------
@@ -29,7 +32,7 @@ Installation
 Support
 -------
 
-Help: [XDA-Thread](https://forum.xda-developers.com/t/mod-xposed-enable-messenger-chat-head-on-android-11-devices.4305391/)
+Help: [XDA-Thread](https://forum.xda-developers.com/t/4305391)
 
 [![Support via PayPal](https://cdn.rawgit.com/twolfson/paypal-github-button/1.0.0/dist/button.svg)](https://www.paypal.me/N3onOrbit/)  
 Crypto: [Bitcoin](https://explorer.bitcoin.com/btc/address/bc1qha53u7h4wed5h4z5mt9t4shfgf66vsy79v55qn) | [BitcoinCash](https://explorer.bitcoin.com/bch/address/bitcoincash:qpyk0wzc2syqg39msnjyg44z4qz9h34upyws7edefm) | [Ethereum](https://etherscan.io/address/0xe92961cc77c3195b8d493fF77aa7425FB9B253D8)  
