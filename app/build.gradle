@@ -3,32 +3,49 @@ plugins {
 }
 
 android {
-    compileSdkVersion 30
-    buildToolsVersion "30.0.3"
+    compileSdkVersion 31
+    buildToolsVersion '31.0.0'
 
     defaultConfig {
-        applicationId "app.neonorbit.chatheadenabler"
-        minSdkVersion 30
-        targetSdkVersion 30
         versionCode 221
-        versionName "2.2.1"
+        versionName '2.2.1'
+        minSdkVersion 30
+        targetSdkVersion 31
+        applicationId 'app.neonorbit.chatheadenabler'
     }
 
     buildTypes {
         release {
             minifyEnabled true
             proguardFiles 'proguard-rules.pro'
-            applicationVariants.all { variant ->
-                variant.outputs.all {
-                    outputFileName = "${rootProject.name}-v${variant.versionName}.apk"
-                }
-            }
         }
     }
 
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
+    }
+
+    applicationVariants.all { variant ->
+        def buildType = variant.name.capitalize()
+        def apkTaskName = "copy${buildType}Apk"
+        def nameSuffix = variant.name == "release" ? '' : "-${variant.name}"
+        def outFileName = "${project.name}-v${variant.versionName}${nameSuffix}.apk"
+        variant.outputs.all {
+            outputFileName = outFileName
+        }
+        task "$apkTaskName"(type: Copy) {
+            from file("$rootProject.projectDir/app/$variant.name/$outFileName")
+            into file("$rootProject.projectDir/out")
+            doLast {
+                delete file("$rootProject.projectDir/app/$variant.name/$outFileName")
+            }
+        }
+    }
+
+    afterEvaluate {
+        assembleDebug.finalizedBy(copyDebugApk)
+        assembleRelease.finalizedBy(copyReleaseApk)
     }
 }
 

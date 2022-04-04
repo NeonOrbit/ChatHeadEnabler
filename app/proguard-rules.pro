@@ -4,8 +4,8 @@
 -keepattributes SourceFile, LineNumberTable
 
 # Preserve app source code
--keepclasseswithmembers class app.neonorbit.chatheadenabler.** {*;}
--keepclasseswithmembers,allowshrinking class org.jf.** {*;}
+-keep class app.neonorbit.chatheadenabler.** {*;}
+-keep,allowshrinking class org.jf.** {*;}
 
 # Ignore unnecessary warnings
 -dontwarn java.lang.ClassValue
