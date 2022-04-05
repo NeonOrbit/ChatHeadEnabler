@@ -1,48 +1,43 @@
 package app.neonorbit.chatheadenabler;
 
 import java.lang.reflect.Method;
+import java.util.Set;
 
 import de.robv.android.xposed.IXposedHookLoadPackage;
+import de.robv.android.xposed.XC_MethodHook;
 import de.robv.android.xposed.XC_MethodReplacement;
 import de.robv.android.xposed.XposedBridge;
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
 
 public class ChatHeadEnabler implements IXposedHookLoadPackage {
-
   @Override
-  public void handleLoadPackage(XC_LoadPackage.LoadPackageParam lpparam) {
-    if (lpparam.packageName.equals(DataProvider.TARGET_PACKAGE) &&
-        lpparam.processName.equals(DataProvider.TARGET_PACKAGE)) {
+  public void handleLoadPackage(XC_LoadPackage.LoadPackageParam param) {
+    if (param.packageName.equals(DataProvider.TARGET_PACKAGE) &&
+        param.processName.equals(DataProvider.TARGET_PACKAGE)) {
       try {
-        hookTargetApp(lpparam.classLoader);
+        registerHooks(param.classLoader);
       } catch (Throwable throwable) {
         fallback(throwable);
       }
     }
   }
 
-  private void hookTargetApp(ClassLoader classLoader) {
-    final DataProvider provider = new DataProvider(classLoader);
-    final Method method = provider.getTargetMethod();
-    final XC_MethodReplacement replace = XC_MethodReplacement.returnConstant(false);
-    if (method != null) {
-      XposedBridge.hookMethod(method, replace);
+  private static void registerHooks(ClassLoader classLoader) {
+    DataProvider provider = new DataProvider(classLoader);
+    Set<Method> targetMethods = provider.getTargetMethods();
+    XC_MethodHook hook = XC_MethodReplacement.returnConstant(false);
+    if (targetMethods != null) {
+      targetMethods.forEach(m -> XposedBridge.hookMethod(m, hook));
     } else {
-      Util.runOnAppContext(classLoader, context -> {
-        try {
-          Method _method = provider.getTargetMethod(context);
-          if (_method == null) fallback(null);
-          else XposedBridge.hookMethod(_method, replace);
-        } catch (Throwable throwable) {
-          fallback(throwable);
-        }
-      });
+      Util.runOnApplication((context) -> {
+        Set<Method> methods = provider.getTargetMethods(context);
+        methods.forEach(method -> XposedBridge.hookMethod(method, hook));
+      }, ChatHeadEnabler::fallback);
     }
   }
 
-  private void fallback(Throwable throwable) {
-    Util.spoofAPILevel();
-    Util.warnFallback(throwable);
+  private static void fallback(Throwable throwable) {
+    Util.applyUnstableHook();
+    Log.warnFallback(throwable);
   }
-
 }
