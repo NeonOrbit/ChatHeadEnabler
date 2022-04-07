@@ -7,8 +7,8 @@ android {
     buildToolsVersion '31.0.0'
 
     defaultConfig {
-        versionCode 221
-        versionName '2.2.1'
+        versionCode 240
+        versionName '2.4.0'
         minSdkVersion 30
         targetSdkVersion 31
         applicationId 'app.neonorbit.chatheadenabler'
