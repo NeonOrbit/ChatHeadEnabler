@@ -6,8 +6,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import java.lang.reflect.Modifier;
-import java.util.LinkedHashSet;
 import java.util.Set;
+import java.util.TreeSet;
 
 import app.neonorbit.chatheadenabler.Log;
 import io.github.neonorbit.dexplore.DexFactory;
@@ -36,7 +36,7 @@ public class DataFetcher {
     DEX_FILTER = DexFilter.builder()
                           .setReferenceTypes(ReferenceTypes.builder().addMethod().build())
                           .setReferenceFilter(ReferenceFilter.contains(Constants.REFERENCE_METHOD))
-                          .setPreferredDex(Constants.TARGET_PREFERRED_DEX)
+                          .setPreferredDexNames(Constants.TARGET_PREFERRED_DEX)
                           .build();
 
     CLASS_FILTER = ClassFilter.builder()
@@ -87,7 +87,7 @@ public class DataFetcher {
     MethodData method;
     method = dexplore.findMethod(DexFilter.builder()
                                           .setDefinedClasses(Constants.MONTAGE_CLASS)
-                                          .setPreferredDex(Constants.HELPER_PREFERRED_DEX)
+                                          .setPreferredDexNames(Constants.HELPER_PREFERRED_DEX)
                                           .allowPreferredDexOnly(true)
                                           .build(),
                                  ClassFilter.ofClass(Constants.MONTAGE_CLASS),
@@ -111,7 +111,7 @@ public class DataFetcher {
   private static Set<MethodData> getRequiredMethods(MethodData data) {
     if (data == null) return null;
     String signature = data.toString();
-    Set<MethodData> dataSet = new LinkedHashSet<>(4);
+    Set<MethodData> dataSet = new TreeSet<>();
     dataSet.add(data);
     data.getClassResult()
         .getMethods().stream()

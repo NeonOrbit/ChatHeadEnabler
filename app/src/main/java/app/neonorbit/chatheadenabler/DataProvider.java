@@ -9,9 +9,10 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import java.lang.reflect.Method;
-import java.util.LinkedHashSet;
+import java.util.Comparator;
 import java.util.Objects;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 import app.neonorbit.chatheadenabler.dex.DataFetcher;
@@ -100,7 +101,7 @@ public class DataProvider {
     if (data == null || data.isEmpty()) return null;
     try {
       Log.d("Loading: " + data);
-      Set<Method> methods = new LinkedHashSet<>(data.size());
+      Set<Method> methods = new TreeSet<>(Comparator.comparing(Method::getName));
       for (MethodData d : data) {
         Method method = XposedHelpers.findMethodExact(d.clazz, classLoader, d.method);
         methods.add(method);
@@ -116,7 +117,7 @@ public class DataProvider {
   public static Set<String> serialize(@NonNull Set<MethodData> data) {
     return Objects.requireNonNull(data)
                   .stream().map(MethodData::serialize)
-                  .collect(Collectors.toCollection(LinkedHashSet::new));
+                  .collect(Collectors.toCollection(TreeSet::new));
   }
 
   @Nullable
@@ -125,7 +126,7 @@ public class DataProvider {
     Set<MethodData> data = serialized.stream()
                                      .map(MethodData::deserialize)
                                      .filter(Objects::nonNull)
-                                     .collect(Collectors.toCollection(LinkedHashSet::new));
+                                     .collect(Collectors.toCollection(TreeSet::new));
     return data.size() == serialized.size() ? data : null;
   }
 
