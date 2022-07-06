@@ -27,7 +27,7 @@ public class DataProvider {
   private static final String PREF_KEY_DATA_SET = "data-set";
   private static final String SHARED_PREFS_FILE = APPLICATION_ID + ".pref";
 
-  private boolean needsFetch = true;
+  private boolean needsFetch = false;
   private final ClassLoader classLoader;
 
   public DataProvider(ClassLoader classLoader) {
@@ -114,20 +114,22 @@ public class DataProvider {
   }
 
   @NonNull
-  public static Set<String> serialize(@NonNull Set<MethodData> data) {
+  private static Set<String> serialize(@NonNull Set<MethodData> data) {
     return Objects.requireNonNull(data)
                   .stream().map(MethodData::serialize)
                   .collect(Collectors.toCollection(TreeSet::new));
   }
 
   @Nullable
-  public static Set<MethodData> deserialize(@Nullable Set<String> serialized) {
+  private static Set<MethodData> deserialize(@Nullable Set<String> serialized) {
     if (serialized == null) return null;
-    Set<MethodData> data = serialized.stream()
-                                     .map(MethodData::deserialize)
-                                     .filter(Objects::nonNull)
-                                     .collect(Collectors.toCollection(TreeSet::new));
-    return data.size() == serialized.size() ? data : null;
+    try {
+      return serialized.stream()
+                       .map(MethodData::deserialize)
+                       .collect(Collectors.toCollection(TreeSet::new));
+    } catch (IllegalArgumentException e) {
+      return null;
+    }
   }
 
   private SharedPreferences getPreferences(Context context) {
