@@ -79,7 +79,8 @@ public class DataFetcher {
                                          .setDefinedClasses(clazz)
                                          .allowPreferredDexOnly(true)
                                          .build(),
-                               CLASS_FILTER.toBuilder().setClassNames(clazz).build(), METHOD_FILTER);
+                               CLASS_FILTER.toBuilder().setClasses(clazz).build(),
+                               METHOD_FILTER);
   }
 
   private MethodData fastFetch() {
@@ -100,7 +101,8 @@ public class DataFetcher {
                                          .setDefinedClasses(clazz)
                                          .allowPreferredDexOnly(true)
                                          .build(),
-                               CLASS_FILTER.toBuilder().setClassNames(clazz).build(), METHOD_FILTER);
+                               CLASS_FILTER.toBuilder().setClasses(clazz).build(),
+                               METHOD_FILTER);
   }
 
   private MethodData deepFetch() {
@@ -110,16 +112,15 @@ public class DataFetcher {
 
   private static Set<MethodData> getRequiredMethods(MethodData data) {
     if (data == null) return null;
-    String signature = data.toString();
+    String signature = data.getSignature();
     Set<MethodData> dataSet = new TreeSet<>();
     dataSet.add(data);
-    data.getClassResult()
+    data.getClassData()
         .getMethods().stream()
         .filter(m -> m.params.length == 0 &&
                      m.returnType.equals(boolean.class.getName()) &&
                      m.getReferencePool().methodSignaturesContain(signature))
         .forEach(dataSet::add);
-    dataSet.add(data);
     return dataSet;
   }
 
@@ -129,6 +130,10 @@ public class DataFetcher {
       @Override
       public void debug(String msg) {
         Log.d(msg);
+      }
+      @Override
+      public void warn(String msg) {
+        Log.w(msg);
       }
     });
   }
