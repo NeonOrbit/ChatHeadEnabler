@@ -22,13 +22,13 @@ import io.github.neonorbit.dexplore.result.MethodData;
 import io.github.neonorbit.dexplore.util.DexLog;
 import io.github.neonorbit.dexplore.util.DexLogger;
 
-public class DataFetcher {
+public class DexFetcher {
   private static final DexFilter DEX_FILTER;
   private static final ClassFilter CLASS_FILTER;
   private static final MethodFilter METHOD_FILTER;
 
   static {
-    DataFetcher.initDexLogger();
+    DexFetcher.initDexLogger();
     ReferenceTypes types = ReferenceTypes.builder().addField().addMethod().setScope(VIRTUAL).build();
     ReferenceFilter cond = ReferenceFilter.fieldsContain(Constants.REFERENCE_FIELD).and(
                            ReferenceFilter.methodsContain(Constants.REFERENCE_METHOD));
@@ -58,7 +58,7 @@ public class DataFetcher {
 
   private final Dexplore dexplore;
 
-  public DataFetcher(@NonNull String path) {
+  public DexFetcher(@NonNull String path) {
     DexOptions options = new DexOptions();
     options.rootDexOnly = true;
     options.enableCache = false;
