@@ -3,6 +3,7 @@ package app.neonorbit.chatheadenabler;
 import android.app.ActivityManager;
 import android.app.Application;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.widget.Toast;
 
@@ -22,6 +23,16 @@ import de.robv.android.xposed.XC_MethodReplacement;
 import de.robv.android.xposed.XposedHelpers;
 
 public final class Util {
+  public static void restartApp(Context context) {
+    Intent intent = Intent.makeRestartActivityTask(
+        context.getPackageManager().getLaunchIntentForPackage(
+            context.getPackageName()
+        ).getComponent()
+    );
+    context.startActivity(intent);
+    Runtime.getRuntime().exit(0);
+  }
+
   public static Context getContext() {
     try {
       Context context;

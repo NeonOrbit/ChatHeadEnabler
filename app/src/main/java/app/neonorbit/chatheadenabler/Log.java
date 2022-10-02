@@ -39,7 +39,7 @@ public final class Log {
   }
 
   public static void warnFallback(Throwable throwable) {
-    Util.showToast(null, MODULE + ": Hook failure\nCheck log for more details");
+    Util.showToast(null, MODULE + "\nHook Failure. Check Log.");
     Log.w("Fallback Mode: You might experience some bugs.");
     log("   Check for new update:  " + UPDATE_URL);
     log("   OR report to:  " + REPORT_URL);

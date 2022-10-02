@@ -3,13 +3,13 @@ package app.neonorbit.chatheadenabler;
 import de.robv.android.xposed.IXposedHookLoadPackage;
 import de.robv.android.xposed.XC_MethodReplacement;
 import de.robv.android.xposed.XposedBridge;
-import de.robv.android.xposed.callbacks.XC_LoadPackage;
+import de.robv.android.xposed.callbacks.XC_LoadPackage.LoadPackageParam;
 
 public class ChatHeadEnabler implements IXposedHookLoadPackage {
   public static final String PACKAGE = "com.facebook.orca";
 
   @Override
-  public void handleLoadPackage(XC_LoadPackage.LoadPackageParam param) {
+  public void handleLoadPackage(LoadPackageParam param) {
     if (param.packageName.equals(PACKAGE) &&
         param.processName.equals(PACKAGE)) {
       try {
@@ -22,16 +22,19 @@ public class ChatHeadEnabler implements IXposedHookLoadPackage {
 
   private static void registerHooks() {
     Util.runOnApplication((context) -> {
+      ChatHeadSettings.attach(context);
       var provider = new DataProvider(context);
-      var hook = XC_MethodReplacement.returnConstant(false);
-      provider.getMethods().forEach(m -> XposedBridge.hookMethod(m, hook));
-    }, exception -> {
-      throw new RuntimeException(exception);
-    });
+      var mode = ChatHeadSettings.getMode(context);
+      var hook = XC_MethodReplacement.returnConstant(mode);
+      provider.getMethods().forEach(m-> XposedBridge.hookMethod(m, hook));
+    }, ChatHeadEnabler::fallback);
   }
 
   private static void fallback(Throwable throwable) {
-    Util.applyUnstableHook();
+    if (ChatHeadSettings.isDefault) {
+      Util.applyUnstableHook();
+    }
+    ChatHeadSettings.markFallback();
     Log.warnFallback(throwable);
   }
 }
