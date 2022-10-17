@@ -5,8 +5,7 @@
     <application
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
-        android:roundIcon="@mipmap/ic_launcher_round"
-        android:allowBackup="false">
+        android:roundIcon="@mipmap/ic_launcher_round">
 
         <meta-data
             android:name="xposedmodule"
