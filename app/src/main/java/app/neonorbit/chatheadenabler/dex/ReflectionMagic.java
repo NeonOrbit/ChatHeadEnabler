@@ -1,6 +1,7 @@
 package app.neonorbit.chatheadenabler.dex;
 
 import static de.robv.android.xposed.XposedHelpers.findClass;
+import static de.robv.android.xposed.XposedHelpers.getStaticObjectField;
 
 import android.content.Context;
 
@@ -8,8 +9,24 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 
 import app.neonorbit.chatheadenabler.Log;
+import de.robv.android.xposed.XposedHelpers;
 
 public final class ReflectionMagic {
+  public static Class<?> loadIfSettingsFragment(String clazz, ClassLoader cl) {
+    if (clazz == null || cl == null) return null;
+    var loadedClass = XposedHelpers.findClassIfExists(clazz, cl);
+    return isSettingsFragment(loadedClass) ? loadedClass : null;
+  }
+
+  public static boolean isSettingsFragment(Class<?> clazz) {
+    try {
+      var internal = getStaticObjectField(clazz, Constants.REDEX_INTERNAL_FIELD);
+      return Constants.ME_LITHO_PREFERENCE_FRAGMENT.equals(internal);
+    } catch (Throwable ignore) {
+      return false;
+    }
+  }
+
   public static Class<?> findTarget(ClassLoader classLoader) {
     try {
       Method first = getMagicMethod(findClass(Constants.CHAT_HEAD_MENU_CLASS, classLoader), 8, 5);

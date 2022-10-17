@@ -5,11 +5,13 @@ import android.app.Application;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.util.TypedValue;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import java.lang.reflect.Method;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
@@ -19,7 +21,9 @@ import java.util.function.Consumer;
 
 import app.neonorbit.chatheadenabler.dex.Constants;
 import de.robv.android.xposed.XC_MethodHook;
+import de.robv.android.xposed.XC_MethodHook.MethodHookParam;
 import de.robv.android.xposed.XC_MethodReplacement;
+import de.robv.android.xposed.XposedBridge;
 import de.robv.android.xposed.XposedHelpers;
 
 public final class Util {
@@ -42,7 +46,6 @@ public final class Util {
       Object currentAcThread = XposedHelpers.callStaticMethod(acThread, "currentActivityThread");
       return (Context) XposedHelpers.callMethod(currentAcThread, "getSystemContext");
     } catch (Throwable ignored) {
-      Log.w("Failed to get Context");
       return null;
     }
   }
@@ -50,7 +53,6 @@ public final class Util {
   public static void runOnApplication(Consumer<Context> consumer, Consumer<Throwable> onFailure) {
     AtomicReference<XC_MethodHook.Unhook> hook = new AtomicReference<>();
     hook.set(XposedHelpers.findAndHookMethod(Application.class, "onCreate", new XC_MethodHook() {
-      @Override
       protected void afterHookedMethod(MethodHookParam param) {
         Unhook hooked = hook.get();
         if (hooked != null) hooked.unhook();
@@ -63,13 +65,26 @@ public final class Util {
     }));
   }
 
+  public static XC_MethodHook.Unhook hookAfter(Method method, Consumer<MethodHookParam> consumer) {
+    return XposedBridge.hookMethod(method, new XC_MethodHook() {
+      protected void afterHookedMethod(MethodHookParam param) { consumer.accept(param); }
+    });
+  }
+
+  public static void runCatching(Runnable runnable, String msg) {
+    try {
+      runnable.run();
+    } catch (Throwable throwable) {
+      Log.w(msg + ": [" + throwable.getClass().getName() + "] -> " + throwable.getMessage());
+    }
+  }
+
   public static String getPackageVersion(@Nullable Context context, @NonNull String packageName) {
     try {
       if (context == null) context = Util.getContext();
       PackageManager pm = Objects.requireNonNull(context).getPackageManager();
       return String.valueOf(pm.getPackageInfo(packageName, 0).getLongVersionCode());
     } catch (Throwable t) {
-      Log.w("Failed to get version: " + t.getMessage());
       return null;
     }
   }
@@ -89,5 +104,12 @@ public final class Util {
   public static String getTime() {
     Date date = new Date(System.currentTimeMillis());
     return new SimpleDateFormat("HH:mm:ss.SSS", Locale.getDefault()).format(date);
+  }
+
+  public static int parseDpi(Context context, int dpi) {
+    return (int) TypedValue.applyDimension(
+        TypedValue.COMPLEX_UNIT_DIP, dpi,
+        context.getResources().getDisplayMetrics()
+    );
   }
 }
