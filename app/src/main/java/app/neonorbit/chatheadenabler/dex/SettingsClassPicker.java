@@ -33,7 +33,7 @@ public class SettingsClassPicker {
   public void pick(Consumer<Class<?>> consumer) {
     observe(consumer, Executors.newSingleThreadScheduledExecutor().schedule(() -> {
           if (!Thread.interrupted() && reference.get() != null) fetch(consumer);
-        }, 4, TimeUnit.MINUTES)
+        }, 10, TimeUnit.SECONDS)
     );
   }
 

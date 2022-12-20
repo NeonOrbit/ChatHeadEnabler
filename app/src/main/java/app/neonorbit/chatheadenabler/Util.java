@@ -1,7 +1,11 @@
 package app.neonorbit.chatheadenabler;
 
+import static de.robv.android.xposed.XposedHelpers.findMethodExact;
+
 import android.app.ActivityManager;
+import android.app.AndroidAppHelper;
 import android.app.Application;
+import android.app.Instrumentation;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -13,10 +17,11 @@ import androidx.annotation.Nullable;
 
 import java.lang.reflect.Method;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
 import app.neonorbit.chatheadenabler.dex.Constants;
@@ -37,32 +42,27 @@ public final class Util {
     Runtime.getRuntime().exit(0);
   }
 
-  public static Context getContext() {
-    try {
-      Context context;
-      Class<?> acThread = XposedHelpers.findClass("android.app.ActivityThread", null);
-      context = (Application) XposedHelpers.callStaticMethod(acThread, "currentApplication");
-      if (context != null) return context;
-      Object currentAcThread = XposedHelpers.callStaticMethod(acThread, "currentActivityThread");
-      return (Context) XposedHelpers.callMethod(currentAcThread, "getSystemContext");
-    } catch (Throwable ignored) {
-      return null;
-    }
-  }
-
   public static void runOnApplication(Consumer<Context> consumer, Consumer<Throwable> onFailure) {
-    AtomicReference<XC_MethodHook.Unhook> hook = new AtomicReference<>();
-    hook.set(XposedHelpers.findAndHookMethod(Application.class, "onCreate", new XC_MethodHook() {
-      protected void afterHookedMethod(MethodHookParam param) {
-        Unhook hooked = hook.get();
-        if (hooked != null) hooked.unhook();
-        try {
-          consumer.accept((Context) param.thisObject);
-        } catch (Throwable throwable) {
-          onFailure.accept(throwable);
-        }
+    List<XC_MethodHook.Unhook> applicationHookList = new ArrayList<>();
+    applicationHookList.addAll(applicationHooks(param -> {
+      if (applicationHookList.isEmpty()) return;
+      applicationHookList.forEach(XC_MethodHook.Unhook::unhook);
+      applicationHookList.clear();
+      try {
+        consumer.accept((Context) param.thisObject);
+      } catch (Throwable throwable) {
+        onFailure.accept(throwable);
       }
     }));
+  }
+
+  private static List<XC_MethodHook.Unhook> applicationHooks(Consumer<MethodHookParam> consumer) {
+    List<XC_MethodHook.Unhook> hooks = new ArrayList<>();
+    hooks.add(hookAfter(findMethodExact(Application.class, "onCreate"), consumer));
+    hooks.add(hookAfter(findMethodExact(
+        Instrumentation.class, "callApplicationOnCreate", Application.class
+    ), consumer));
+    return hooks;
   }
 
   public static XC_MethodHook.Unhook hookAfter(Method method, Consumer<MethodHookParam> consumer) {
@@ -81,7 +81,7 @@ public final class Util {
 
   public static String getPackageVersion(@Nullable Context context, @NonNull String packageName) {
     try {
-      if (context == null) context = Util.getContext();
+      if (context == null) context = AndroidAppHelper.currentApplication();
       PackageManager pm = Objects.requireNonNull(context).getPackageManager();
       return String.valueOf(pm.getPackageInfo(packageName, 0).getLongVersionCode());
     } catch (Throwable t) {
@@ -96,7 +96,7 @@ public final class Util {
 
   public static void showToast(@Nullable Context context, @NonNull String toast) {
     try {
-      if (context == null) context = getContext();
+      if (context == null) context = AndroidAppHelper.currentApplication();
       Toast.makeText(context, toast, Toast.LENGTH_LONG).show();
     } catch (Throwable ignored) {}
   }
