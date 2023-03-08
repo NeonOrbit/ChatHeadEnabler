@@ -49,7 +49,11 @@ public final class Util {
       applicationHookList.forEach(XC_MethodHook.Unhook::unhook);
       applicationHookList.clear();
       try {
-        consumer.accept((Context) param.thisObject);
+        if (param.thisObject instanceof Context) {
+          consumer.accept((Context) param.thisObject);
+        } else {
+          consumer.accept((Context) param.args[0]);
+        }
       } catch (Throwable throwable) {
         onFailure.accept(throwable);
       }
