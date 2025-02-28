@@ -36,11 +36,6 @@ Support
 -------
 Help: [XDA-Thread](https://forum.xda-developers.com/t/4305391)
 
-[![Support via PayPal](res/paypal.png)](https://www.paypal.me/N3onOrbit/)  
-Crypto: [Bitcoin](https://blockchair.com/bitcoin/address/bc1qha53u7h4wed5h4z5mt9t4shfgf66vsy79v55qn)
-| [BitcoinCash](https://blockchair.com/bitcoin-cash/address/qpyk0wzc2syqg39msnjyg44z4qz9h34upyws7edefm)
-| [Ethereum](https://etherscan.io/address/0xe92961cc77c3195b8d493fF77aa7425FB9B253D8)
-
 ------------
 Certificate Fingerprints:
 ```
