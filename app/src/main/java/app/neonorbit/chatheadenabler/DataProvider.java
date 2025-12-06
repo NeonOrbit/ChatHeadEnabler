@@ -22,10 +22,6 @@ public class DataProvider {
   private final Context context;
 
   public DataProvider(Context context) {
-    String pkg = context.getPackageName();
-    if (!pkg.equals(PACKAGE)) {
-      throw new IllegalArgumentException("Invalid context: " + pkg);
-    }
     this.context = context;
   }
 

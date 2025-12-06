@@ -8,6 +8,11 @@
 /.idea/workspace.xml
 /.idea/navEditor.xml
 /.idea/assetWizardSettings.xml
+/.idea/AndroidProjectSystem.xml
+/.idea/migrations.xml
+/.idea/compiler.xml
+/.idea/gradle.xml
+/.idea/misc.xml
 .DS_Store
 /build
 /app/release
