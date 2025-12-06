@@ -14,8 +14,6 @@ import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 import app.neonorbit.chatheadenabler.dex.DexFetcher;
-import app.neonorbit.chatheadenabler.dex.ReflectionMagic;
-import de.robv.android.xposed.XposedHelpers;
 import io.github.neonorbit.dexplore.result.MethodData;
 
 public class DataProvider {
@@ -36,8 +34,7 @@ public class DataProvider {
   private Set<Method> fetchData() {
     Log.d("Fetching new data");
     String apk = context.getApplicationInfo().sourceDir;
-    Class<?> target = ReflectionMagic.findTarget(context.getClassLoader());
-    Set<MethodData> result = new DexFetcher(apk).fetch(target);
+    Set<MethodData> result = new DexFetcher(apk).fetch(null);
     if (result != null) {
       Set<Method> methods = loadMethods(result);
       if (methods != null) {
@@ -76,8 +73,7 @@ public class DataProvider {
       ClassLoader classLoader = context.getClassLoader();
       Set<Method> methods = new TreeSet<>(Comparator.comparing(Method::getName));
       for (MethodData data : dataSet) {
-        Method method = XposedHelpers.findMethodExact(data.clazz, classLoader, data.method);
-        methods.add(method);
+        methods.add(data.loadMethod(classLoader));
       }
       return methods;
     } catch (Throwable t) {

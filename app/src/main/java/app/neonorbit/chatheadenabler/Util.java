@@ -9,6 +9,7 @@ import android.app.Instrumentation;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.os.Process;
 import android.util.TypedValue;
 import android.widget.Toast;
 
@@ -39,6 +40,7 @@ public final class Util {
         ).getComponent()
     );
     context.startActivity(intent);
+    Process.killProcess(Process.myPid());
     Runtime.getRuntime().exit(0);
   }
 

@@ -35,8 +35,6 @@ public class DexFetcher {
         );
 
         DEX_FILTER = DexFilter.builder()
-                .setReferenceTypes(ReferenceTypes.builder().addMethod().build())
-                .setReferenceFilter(ReferenceFilter.contains(Constants.REFERENCE_METHOD))
                 .setPreferredDexNames(Constants.TARGET_PREFERRED_DEX)
                 .build();
 
@@ -114,7 +112,6 @@ public class DexFetcher {
         Set<MethodData> dataSet = new TreeSet<>();
         dataSet.add(data);
         data.getClassData().getMethods().stream().filter(m ->
-                        m.params.length == 0 &&
                         m.returnType.equals(boolean.class.getName()) &&
                         m.getReferencePool().methodSignaturesContain(signature)
                 ).forEach(dataSet::add);

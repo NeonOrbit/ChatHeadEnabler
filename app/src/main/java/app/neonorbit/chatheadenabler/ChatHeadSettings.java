@@ -19,6 +19,7 @@ import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 
+import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -70,8 +71,8 @@ public class ChatHeadSettings {
         AlertDialog setting = buildSettingDialog(context);
         AlertDialog disable = buildDisableDialog(context);
         if (!(context instanceof Activity) && Settings.canDrawOverlays(context)) {
-            setting.getWindow().setType(TYPE_APPLICATION_OVERLAY);
-            disable.getWindow().setType(TYPE_APPLICATION_OVERLAY);
+            Optional.ofNullable(setting.getWindow()).ifPresent(w -> w.setType(TYPE_APPLICATION_OVERLAY));
+            Optional.ofNullable(disable.getWindow()).ifPresent(w -> w.setType(TYPE_APPLICATION_OVERLAY));
         }
         button.setOnClickListener(view -> setting.show());
         button.setOnLongClickListener(view -> {
@@ -113,7 +114,9 @@ public class ChatHeadSettings {
                 dialog.getButton(DialogInterface.BUTTON_NEGATIVE).setTextColor(Color.RED);
                 dialog.getButton(DialogInterface.BUTTON_POSITIVE).setTextColor(Color.CYAN);
                 dialog.getButton(DialogInterface.BUTTON_NEUTRAL).setTextColor(Color.YELLOW);
-                dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.parseColor("#233B43")));
+                Optional.ofNullable(dialog.getWindow()).ifPresent(w ->
+                    w.setBackgroundDrawable(new ColorDrawable(Color.parseColor("#233B43")))
+                );
             } catch (Throwable ignore) {}
         });
         return dialog;

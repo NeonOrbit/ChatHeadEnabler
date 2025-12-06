@@ -12,7 +12,7 @@ import java.util.Set;
 public class DataPreferences {
   private static final String KEY_BUBBLE = "bubble";
   private static final String KEY_SETTING = "setting";
-  private static final String KEY_VERSION = "version";
+  private static final String KEY_VERSION = "app-ver";
   private static final String KEY_DATA_SET = "data_set";
   private static final String KEY_FB_SETTING = "setting_cls";
   private static final String FILE = APPLICATION_ID + ".pref";

@@ -2,9 +2,9 @@ package app.neonorbit.chatheadenabler.dex;
 
 public final class Constants {
   public static final String[] TARGET_PREFERRED_DEX = {"classes2.dex"};
-  public static final String[] HELPER_PREFERRED_DEX = {"classes5.dex", "classes6.dex"};
+  public static final String[] HELPER_PREFERRED_DEX = {"classes2.dex", "classes7.dex", "classes8.dex"};
   public static final String[] SETTINGS_PREFERRED_DEX = {
-      "classes3.dex", "classes5.dex", "classes4.dex", "classes6.dex"
+      "classes6.dex", "classes7.dex", "classes5.dex"
   };
 
   public static final String REFERENCE_FIELD = "SDK_INT";
